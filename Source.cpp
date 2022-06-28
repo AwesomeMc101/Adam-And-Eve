@@ -17,7 +17,6 @@ std::vector<string> disasterNames = { "hurricane","epidemic","tornado","war" };
 
 class Human {
 public:
-	string genderS;
 	int gender; //1==Male,2==Female
 
 	string name;
@@ -25,15 +24,16 @@ public:
 	int familyTreeStem = 0;
 
 	unsigned int age;
-	bool canBreed = true;
 	bool isMarried = false;
 	bool isKing = false;
-	//maybe do special traits? lol
+	//Special Traits
+	bool immortal = false;
 };
 
 namespace ClassHelpers
 {
-	Human returnBoy(std::vector<Human> humans)
+	string classHelp_TownName;
+	/*Human returnBoy(std::vector<Human> humans)
 	{
 		std::vector<Human> boys;
 		for (Human human : humans)
@@ -58,74 +58,82 @@ namespace ClassHelpers
 		}
 		int idx = rand() % girls.size() - 1;
 		return girls[idx];
-	}
+	}*/
 
 	////////
 
-	Human returnAdultBoy(std::vector<Human> humans)
+	std::vector<Human> yearlyAdultBoys;
+	std::vector<Human> yearlyAdultGirls;
+
+	std::vector<int> yearlyAdultMaleIndex;
+	std::vector<int> yearlyAdultFemaleIndex;
+
+	int returnAdultMaleIndex(std::vector<Human> humans);
+	void setAdultGenders(std::vector<Human>& humans)
 	{
 		std::vector<Human> boys;
-		for (Human human : humans)
+		std::vector<Human> girls;
+
+		std::vector<int> boysindex;
+		std::vector<int> girlsindex;
+
+		for (int i = 0; i < humans.size(); i++)
 		{
+			Human human = humans[i];
 			if (human.gender == 1 && human.age > 17)
 			{
 				boys.push_back(human);
+				boysindex.push_back(i);
 			}
+			else if (human.gender == 2 && human.age > 17)
+			{
+				girls.push_back(human);
+				girlsindex.push_back(i);
+			}
+
+			
+			/* AGING (STOP 2X LOOP) */
+
+
 		}
-		int idx = rand() % boys.size();
-		return boys[idx];
+		yearlyAdultBoys.clear();
+		yearlyAdultBoys = boys;
+
+		yearlyAdultGirls.clear();
+		yearlyAdultGirls = girls;
+
+		yearlyAdultMaleIndex.clear();
+		yearlyAdultMaleIndex = boysindex;
+
+		yearlyAdultFemaleIndex.clear();
+		yearlyAdultFemaleIndex = girlsindex;
+
+	}
+	Human returnAdultBoy(std::vector<Human> humans)
+	{
+		int idx = rand() % yearlyAdultBoys.size();
+		return yearlyAdultBoys[idx];
 	}
 	Human returnAdultGirl(std::vector<Human> humans)
 	{
-		std::vector<Human> girls;
-		for (Human human : humans)
-		{
-			if (human.gender == 2 && human.age > 17)
-			{
-				girls.push_back(human);
-			}
-		}
-		int idx = rand() % girls.size();
-		return girls[idx];
+		int idx = rand() % yearlyAdultGirls.size();
+		return yearlyAdultGirls[idx];
 	}
 
 	string genderToName(int gender)
 	{
-		if (gender == 1)
-		{
-			return "Male";
-		}
-		else if (gender == 2)
-		{
-			return "Female";
-		}
-		return "NO_SUCH_GENDER";
+		std::vector<string> genders = { "NO_SUCH_GENDER","Male","Female" };
+		return genders[gender];
 	}
 	int returnAdultMaleIndex(std::vector<Human> humans)
 	{
-		std::vector<int> index;
-		for (int i = 0; i < humans.size(); i++)
-		{
-			if (humans[i].age > 17 && humans[i].gender == 1)
-			{
-				index.push_back(i);
-			}
-		}
-		int idx = rand() % index.size();
-		return index[idx];
+		int idx = rand() % yearlyAdultMaleIndex.size();
+		return yearlyAdultMaleIndex[idx];
 	}
 	int returnAdultFemaleIndex(std::vector<Human> humans)
 	{
-		std::vector<int> index;
-		for (int i = 0; i < humans.size(); i++)
-		{
-			if (humans[i].age > 17 && humans[i].gender == 2)
-			{
-				index.push_back(i);
-			}
-		}
-		int idx = rand() % index.size();
-		return index[idx];
+		int idx = rand() % yearlyAdultFemaleIndex.size();
+		return yearlyAdultFemaleIndex[idx];
 	}
 }
 
@@ -133,23 +141,11 @@ namespace Breeding
 {
 	int canBreed(std::vector<Human> humans)
 	{
-		int boys = 0;
-		int girls = 0;
-		for (Human human : humans)
-		{
-			if (human.age > 17 && human.canBreed)
-			{
-				switch (human.gender)
-				{
-				case 1:
-					boys++;
-					break;
-				case 2:
-					girls++;
-					break;
-				}
-			}
-		}
+		int boys = ClassHelpers::yearlyAdultBoys.size();
+		int girls = ClassHelpers::yearlyAdultGirls.size();
+		
+		std::cout << boys << " | " << girls;
+
 		if (boys > 0 && girls > 0)
 		{
 			if (boys > girls)
@@ -181,7 +177,6 @@ namespace Breeding
 		ourBaby.gender = gender;
 		ourBaby.name = ourBaby.name + ' ' + familyTrees[ourBoy.familyTreeStem]; //take father name
 		ourBaby.age = 0;
-		ourBaby.canBreed = true;
 		ourBaby.familyTreeStem = ourBoy.familyTreeStem;
 		return ourBaby;
 	}
@@ -318,6 +313,7 @@ namespace Town
 
 			std::cout << "They named their town " << townNames[townNameIndex];
 			townName = townNames[townNameIndex];
+			ClassHelpers::classHelp_TownName = townName;
 
 			electKing(humans);
 			townExists = true;
@@ -330,7 +326,7 @@ namespace NaturalDisasters
 	void disaster(std::vector<Human>& humans)
 	{
 		int doDisaster = rand() % 100;
-		if (doDisaster != 89)
+		if (doDisaster < 90)
 		{
 			return;
 		}
@@ -341,8 +337,8 @@ namespace NaturalDisasters
 		int deathToll = 0;
 		for (int i = 0; i < humans.size(); i++)
 		{
-			int death = rand() % 10;
-			if (death > 7)
+			int death = rand() % 100;
+			if (death > 90)
 			{
 				if (humans[i].isKing)
 				{
@@ -391,6 +387,17 @@ void incrementAges(std::vector<Human>& humans)
 }
 int main()
 {
+	/*IDEA TO UPGRADE SPEED
+	///////////////////
+	///////////////////
+	
+	Instead of scanning over the vector everytime to collect gender data,
+	scan it over once for each gender every year and set that to a temporary
+	variable used in every breed.
+
+	Warning: may make it go ultra-fast :D :D
+
+	*/
 	srand(time(NULL)); // pseudo-random
 
 	std::vector<Human> humans;
@@ -404,6 +411,11 @@ int main()
 	int year = 0;
 	while (1)
 	{
+		if (humans.size() < 2)
+		{
+			std::cout << "Your population died out.";
+			break;
+		}
 		std::cout << "\n\n\n\n\nCurrent Year: " << year << "\nCurrent Population: " << humans.size()
 			<< "\nBloodline(s): " << familyTrees.size() << "\nTown Name: " << Town::townName;
 		std::cout << "\n\n";
@@ -417,9 +429,12 @@ int main()
 			<< "\nBloodline(s): " << familyTrees.size() << "\nTown Name: " << Town::townName;;
 		std::cout << "\n\n";
 		/* Breeding */
+		ClassHelpers::setAdultGenders(humans);
 		if (Breeding::canBreed(humans))
 		{
-			for (int i = 0; i < Breeding::canBreed(humans); i++)
+			bool canMarry = Marriage::canMarry(humans);
+			int canBreed = Breeding::canBreed(humans);
+			for (int i = 0; i < canBreed; i++)
 			{
 				int casing = rand() % 4;
 				switch (casing)
@@ -428,7 +443,7 @@ int main()
 					humans.push_back(Breeding::doBreed(humans, familyTrees));
 					break;
 				case 2:
-					if (Marriage::canMarry(humans))
+					if (canMarry)
 					{
 						Marriage::marryTwo(humans, familyTrees);
 					}
@@ -441,14 +456,18 @@ int main()
 		{
 			Town::doTown(humans);
 		}
+		
 
-		NaturalDisasters::disaster(humans);
 
+		if (year > 50)
+		{
+			NaturalDisasters::disaster(humans);
+		}
 		incrementAges(humans);
 		year++;
 		if (year % 100 == 0)
 		{
-			//std::cin.get();
+			std::cin.get();
 		}
 		//std::cin.get();
 	}
